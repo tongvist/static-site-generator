@@ -6,7 +6,7 @@ class LeafNode(HTMLNode):
         self.props = props
 
     def to_html(self):
-        if not self.value:
+        if self.value == None:
             raise ValueError("Missing value for node")
 
         if self.tag == None:
