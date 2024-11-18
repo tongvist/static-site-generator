@@ -4,7 +4,7 @@ from leafnode import LeafNode
 class TestLeafNode(unittest.TestCase):
     def test_missing_value(self):
         # All leafnodes must have a value
-        leaf = LeafNode("p", value="")
+        leaf = LeafNode("p", value=None)
         self.assertRaises(ValueError, leaf.to_html)
 
     def test_check_output_with_tag(self):
