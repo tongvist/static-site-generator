@@ -11,6 +11,5 @@ class TestLeafNode(unittest.TestCase):
         leaf = LeafNode(tag = "p", value = "text value for node")
         self.assertTrue(f"<{leaf.tag}>" and f"</{leaf.tag}>" in leaf.to_html())
 
-
 if __name__ == "__main__":
     unittest.main()
