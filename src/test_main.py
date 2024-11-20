@@ -57,7 +57,7 @@ class TestMain(unittest.TestCase):
         self.assertEqual(split_nodes_delimiter([code_node], "`", TextType.CODE), expected)
 
     def test_split_nodes_delimiter_bold_in_middle(self):
-        bold_node = TextNode("This has a **bold word** in the middle", TextType.BOLD)
+        bold_node = TextNode("This has a **bold word** in the middle", TextType.NORMAL)
         expected_bold = [
                         TextNode("This has a ", TextType.NORMAL), 
                         TextNode("bold word", TextType.BOLD), 
@@ -66,7 +66,7 @@ class TestMain(unittest.TestCase):
         self.assertEqual(split_nodes_delimiter([bold_node], "**", TextType.BOLD), expected_bold)
 
     def test_split_nodes_delimiter_starts_with_tag(self):
-        starts_with_tag = TextNode("**This** starts with a bold word", TextType.BOLD)
+        starts_with_tag = TextNode("**This** starts with a bold word", TextType.NORMAL)
         expected_bold_2 = [
                             TextNode("This", TextType.BOLD), 
                             TextNode(" starts with a bold word", TextType.NORMAL), 
@@ -74,7 +74,7 @@ class TestMain(unittest.TestCase):
         self.assertEqual(split_nodes_delimiter([starts_with_tag], "**", TextType.BOLD), expected_bold_2)
 
     def test_split_nodes_delimiter_starts_with_short_tag(self):
-        starts_with_tag = TextNode("`This starts` with a code block", TextType.CODE)
+        starts_with_tag = TextNode("`This starts` with a code block", TextType.NORMAL)
         expected = [
                     TextNode("This starts", TextType.CODE), 
                     TextNode(" with a code block", TextType.NORMAL), 
@@ -82,12 +82,46 @@ class TestMain(unittest.TestCase):
         self.assertEqual(split_nodes_delimiter([starts_with_tag], "`", TextType.CODE), expected)
 
     def test_split_nodes_delimiter_ends_with_tag(self):
-        ends_with_tag = TextNode("This ends with a *italic block*", TextType.ITALIC)
+        ends_with_tag = TextNode("This ends with a *italic block*", TextType.NORMAL)
         expected = [
                     TextNode("This ends with a ", TextType.NORMAL), 
                     TextNode("italic block", TextType.ITALIC), 
                     ]
         self.assertEqual(split_nodes_delimiter([ends_with_tag], "*", TextType.ITALIC), expected)
+
+    def test_split_nodes_delimiter_multiple_nodes(self):
+        node1 = TextNode("This ends with a **bold block**", TextType.NORMAL)
+        node2 = TextNode("This has a **bold block** in the middle", TextType.NORMAL)
+        expected = [
+                    TextNode("This ends with a ", TextType.NORMAL), 
+                    TextNode("bold block", TextType.BOLD), 
+                    TextNode("This has a ", TextType.NORMAL),
+                    TextNode("bold block", TextType.BOLD),
+                    TextNode(" in the middle", TextType.NORMAL)
+                    ]
+        self.assertEqual(split_nodes_delimiter([node1, node2], "**", TextType.BOLD), expected)
+
+    def test_split_nodes_delimiter_no_delimiter_in_text(self):
+        without_delimiter = TextNode("This has no delimiters", TextType.NORMAL)
+        expected = [
+                    TextNode("This has no delimiters", TextType.NORMAL) 
+                    ]
+        self.assertEqual(split_nodes_delimiter([without_delimiter], "*", TextType.NORMAL), expected)
+
+    def test_split_nodes_delimiter_text_type_other_than_normal(self):
+        node = TextNode("This is all italic", TextType.ITALIC)
+        node2 = TextNode("**This should be bold**", TextType.NORMAL)
+        expected = [
+                    TextNode("This is all italic", TextType.ITALIC),
+                    TextNode("This should be bold", TextType.BOLD)
+                    ]
+        self.assertEqual(split_nodes_delimiter([node, node2], "**", TextType.BOLD), expected)
+
+    def test_split_nodes_delimiter_missing_closing_delimiter(self):
+        missing_closing_tag = TextNode("This **bold was not closed", TextType.NORMAL)
+        with self.assertRaises(Exception) as e:
+            split_nodes_delimiter([missing_closing_tag], "**", TextType.BOLD)
+        self.assertTrue("invalid markdown" in str(e.exception).lower())
 
 if __name__ == "__main__":
     unittest.main()
