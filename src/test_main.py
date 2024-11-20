@@ -123,5 +123,16 @@ class TestMain(unittest.TestCase):
             split_nodes_delimiter([missing_closing_tag], "**", TextType.BOLD)
         self.assertTrue("invalid markdown" in str(e.exception).lower())
 
+    def test_split_nodes_delimiter_many_tags_in_text(self):
+        node = TextNode("**This** has many **tags**", TextType.NORMAL)
+        node2 = TextNode("**This should be bold**", TextType.NORMAL)
+        expected = [
+                    TextNode("This", TextType.BOLD),
+                    TextNode(" has many ", TextType.NORMAL),
+                    TextNode("tags", TextType.BOLD),
+                    TextNode("This should be bold", TextType.BOLD),
+                    ]
+        self.assertEqual(split_nodes_delimiter([node, node2], "**", TextType.BOLD), expected)
+
 if __name__ == "__main__":
     unittest.main()
