@@ -1,6 +1,6 @@
 from textnode import TextNode, TextType
 from leafnode import LeafNode
-from main import text_node_to_html_node, split_nodes_delimiter
+from main import text_node_to_html_node, split_nodes_delimiter, extract_markdown_images
 import unittest
 
 class TestMain(unittest.TestCase):
@@ -133,6 +133,17 @@ class TestMain(unittest.TestCase):
                     TextNode("This should be bold", TextType.BOLD),
                     ]
         self.assertEqual(split_nodes_delimiter([node, node2], "**", TextType.BOLD), expected)
+
+    def test_extract_markdown_images_normal_cases(self):
+        text = "This is text with a ![rick roll](https://i.imgur.com/aKaOqIh.gif) and ![obi wan](https://i.imgur.com/fJRm4Vk.jpeg)"
+
+        expected = [("rick roll", "https://i.imgur.com/aKaOqIh.gif"), ("obi wan", "https://i.imgur.com/fJRm4Vk.jpeg")]
+        self.assertEqual(extract_markdown_images(text), expected)
+
+        text2 = "This is text with a link ![to boot dev](https://www.boot.dev)"
+
+        expected2 = [("to boot dev", "https://www.boot.dev")]
+        self.assertEqual(extract_markdown_images(text2), expected2)
 
 if __name__ == "__main__":
     unittest.main()

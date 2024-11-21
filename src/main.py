@@ -1,9 +1,9 @@
 from textnode import TextNode, TextType
 from leafnode import LeafNode
+import re
 
 def main():
-    link_node = TextNode("This is a link node", TextType.LINK, "http://www.testing.dev")
-    print(text_node_to_html_node(link_node).to_html())
+    pass
 
 def text_node_to_html_node(text_node):
     if text_node.text_type not in TextType:
@@ -51,6 +51,16 @@ def split_nodes_delimiter(old_nodes, delimiter, text_type):
 
     return new_nodes
 
+def extract_markdown_images(text):
+    alt_texts = re.findall(r"(?<=!\[).+?(?=\])", text)
+    urls = re.findall(r"(?<=\]\().+?(?=\))", text)
+
+    result = []
+
+    for i in range(len(alt_texts)):
+        result.append((alt_texts[i], urls[i]))
+
+    return result
 
 if __name__ == "__main__":
     main()
