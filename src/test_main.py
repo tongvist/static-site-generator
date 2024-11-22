@@ -1,9 +1,10 @@
 from textnode import TextNode, TextType
 from leafnode import LeafNode
-from main import text_node_to_html_node, split_nodes_delimiter, extract_markdown_images, extract_markdown_links
+from main import text_node_to_html_node, split_nodes_delimiter, extract_markdown_images, extract_markdown_links, split_nodes_image
 import unittest
 
 class TestMain(unittest.TestCase):
+# text_node_to_html_node
     def test_text_node_to_html_node_plain_text(self):
         node = TextNode("This is the text value", TextType.NORMAL)
         html_node = text_node_to_html_node(node)
@@ -47,6 +48,7 @@ class TestMain(unittest.TestCase):
             text_node_to_html_node(node)
         self.assertTrue("invalid text type" in str(e.exception).lower())
 
+#split_nodes_delimiter
     def test_split_nodes_delimiter_code_in_middle(self):
         code_node = TextNode("This has a `code block` in the middle", TextType.NORMAL)
         expected = [
@@ -134,6 +136,7 @@ class TestMain(unittest.TestCase):
                     ]
         self.assertEqual(split_nodes_delimiter([node, node2], "**", TextType.BOLD), expected)
 
+#extract_markdown_images
     def test_extract_markdown_images_normal_cases(self):
         text = "This is text with a ![rick roll](https://i.imgur.com/aKaOqIh.gif) and ![obi wan](https://i.imgur.com/fJRm4Vk.jpeg)"
 
@@ -148,7 +151,7 @@ class TestMain(unittest.TestCase):
     def test_extract_markdown_images_no_matches(self):
         text = "This is a text without image tags"
 
-        self.assertEqual(extract_markdown_images(text), None)
+        self.assertEqual(extract_markdown_images(text), [])
 
     def test_extract_markdown_images_empty_alt_text(self):
         text = "This image has empty alt text ![](https://www.boot.dev)"
@@ -168,6 +171,7 @@ class TestMain(unittest.TestCase):
 
         self.assertEqual(extract_markdown_images(text), expected)
 
+#extract_markdown_links
     def test_extract_markdown_links_normal_cases(self):
         text = "This is text with a [rick roll](https://i.imgur.com/aKaOqIh.gif) and [obi wan](https://i.imgur.com/fJRm4Vk.jpeg)"
 
@@ -201,6 +205,55 @@ class TestMain(unittest.TestCase):
         expected = [("alt text in here", ""), ("", "https://www.boot.dev")]
 
         self.assertEqual(extract_markdown_links(text), expected)
+
+#split_nodes_image
+    def test_split_nodes_image_basic_cases(self):
+        node = TextNode("This is text with an image of ![to boot dev](https://www.boot.dev) and ![to youtube](https://www.youtube.com/@bootdotdev)", TextType.NORMAL,)
+        expected = [
+                TextNode("This is text with an image of ", TextType.NORMAL),
+                TextNode("to boot dev", TextType.IMAGE, "https://www.boot.dev"),
+                TextNode(" and ", TextType.NORMAL,),
+                TextNode("to youtube", TextType.IMAGE, "https://www.youtube.com/@bootdotdev")
+            ]
+        self.assertEqual(split_nodes_image([node]), expected)
+
+
+        node2 = TextNode("This is text with an image of ![to boot dev](https://www.boot.dev) and ![to youtube](https://www.youtube.com/@bootdotdev), what else does one need?", TextType.NORMAL)
+        expected2 = [
+                TextNode("This is text with an image of ", TextType.NORMAL),
+                TextNode("to boot dev", TextType.IMAGE, "https://www.boot.dev"),
+                TextNode(" and ", TextType.NORMAL),
+                TextNode("to youtube", TextType.IMAGE, "https://www.youtube.com/@bootdotdev"),
+                TextNode(", what else does one need?", TextType.NORMAL)
+            ]
+        self.assertEqual(split_nodes_image([node2]), expected2)
+
+        node3 = TextNode("![This](https://www.boot.dev) is text with an image of and ![to youtube](https://www.youtube.com/@bootdotdev), what else does one need?", TextType.NORMAL)
+        expected3 = [
+                TextNode("This", TextType.IMAGE, "https://www.boot.dev"),
+                TextNode(" is text with an image of and ", TextType.NORMAL),
+                TextNode("to youtube", TextType.IMAGE, "https://www.youtube.com/@bootdotdev"),
+                TextNode(", what else does one need?", TextType.NORMAL)
+            ]
+        self.assertEqual(split_nodes_image([node3]), expected3)
+
+    def test_split_nodes_image_multiple_nodes(self):
+        node = TextNode("This is text with an image of ![to boot dev](https://www.boot.dev) and ![to youtube](https://www.youtube.com/@bootdotdev)", TextType.NORMAL)
+        node2 = TextNode("Another node without images", TextType.NORMAL)
+
+        expected = [
+                TextNode("This is text with an image of ", TextType.NORMAL),
+                TextNode("to boot dev", TextType.IMAGE, "https://www.boot.dev"),
+                TextNode(" and ", TextType.NORMAL,),
+                TextNode("to youtube", TextType.IMAGE, "https://www.youtube.com/@bootdotdev"),
+                TextNode("Another node without images", TextType.NORMAL)
+            ]
+        self.assertEqual(split_nodes_image([node, node2]), expected)
+
+    def test_split_nodes_image(self):
+        node = TextNode("This is not TextType.NORMAL", TextType.ITALIC)
+        expected = [TextNode("This is not TextType.NORMAL", TextType.ITALIC)]
+        self.assertEqual(split_nodes_image([node]), expected)
 
 
 if __name__ == "__main__":

@@ -55,7 +55,7 @@ def extract_markdown_images(text):
     matches = re.findall(r"!\[([^\[\]]*)\]\(([^\(\)]*)\)", text)
 
     if len(matches) == 0:
-        return None
+        return []
 
     return matches
 
@@ -66,6 +66,48 @@ def extract_markdown_links(text):
         return None
 
     return matches
+
+def split_nodes_image(old_nodes):
+    new_nodes = []
+
+    for node in old_nodes:
+        if node.text == "":
+            continue
+        if node.text_type != TextType.NORMAL:
+            new_nodes.append(node)
+            continue
+
+        alts_and_urls = extract_markdown_images(node.text) # [(alt text, url)]
+
+        if len(alts_and_urls) == 0:
+            new_nodes.append(node)
+            continue
+
+        text_buffer = node.text
+
+        for i in range(len(alts_and_urls)):
+            image_alt = alts_and_urls[i][0]
+            image_url = alts_and_urls[i][1]
+
+            # split text_buffer by img link at i
+            sections = text_buffer.split(f"![{image_alt}]({image_url})", 1)
+
+            # if 1st element of split is empty, ignore 
+            # else add TextNode(1st element, TextType.NORMAL) to new_nodes
+            if sections[0] != "":
+                new_nodes.append(TextNode(sections[0], TextType.NORMAL))
+
+            # add TextNode(alts_and_urls[i][0], TextType.LINK, alts_and_urls[i][1]) to new_nodes
+            new_nodes.append(TextNode(alts_and_urls[i][0], TextType.IMAGE, alts_and_urls[i][1]))
+
+            # update text_buffer to 2nd element of split
+            text_buffer = sections[1]
+
+        if text_buffer != "":
+            new_nodes.append(TextNode(text_buffer, TextType.NORMAL))
+
+    return new_nodes
+
 
 if __name__ == "__main__":
     main()
