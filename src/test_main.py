@@ -1,6 +1,6 @@
 from textnode import TextNode, TextType
 from leafnode import LeafNode
-from main import text_node_to_html_node, split_nodes_delimiter, extract_markdown_images, extract_markdown_links, split_nodes_image
+from main import text_node_to_html_node, split_nodes_delimiter, extract_markdown_images, extract_markdown_links, split_nodes_image, split_nodes_link
 import unittest
 
 class TestMain(unittest.TestCase):
@@ -186,7 +186,7 @@ class TestMain(unittest.TestCase):
     def test_extract_markdown_links_no_matches(self):
         text = "This is a text without link tags"
 
-        self.assertEqual(extract_markdown_links(text), None)
+        self.assertEqual(extract_markdown_links(text), [])
 
     def test_extract_markdown_links_empty_alt_text(self):
         text = "This image has empty alt text [](https://www.boot.dev)"
@@ -250,11 +250,58 @@ class TestMain(unittest.TestCase):
             ]
         self.assertEqual(split_nodes_image([node, node2]), expected)
 
-    def test_split_nodes_image(self):
+    def test_split_nodes_image_wrong_text_type(self):
         node = TextNode("This is not TextType.NORMAL", TextType.ITALIC)
         expected = [TextNode("This is not TextType.NORMAL", TextType.ITALIC)]
         self.assertEqual(split_nodes_image([node]), expected)
 
+#split_nodes_link
+    def test_split_nodes_link_basic_cases(self):
+        node = TextNode("This is text with a link [to boot dev](https://www.boot.dev) and [to youtube](https://www.youtube.com/@bootdotdev)", TextType.NORMAL,)
+        expected = [
+                TextNode("This is text with a link ", TextType.NORMAL),
+                TextNode("to boot dev", TextType.LINK, "https://www.boot.dev"),
+                TextNode(" and ", TextType.NORMAL,),
+                TextNode("to youtube", TextType.LINK, "https://www.youtube.com/@bootdotdev")
+            ]
+        self.assertEqual(split_nodes_link([node]), expected)
+
+        node2 = TextNode("This is text with a link [to boot dev](https://www.boot.dev) and [to youtube](https://www.youtube.com/@bootdotdev), what else does one need?", TextType.NORMAL)
+        expected2 = [
+                TextNode("This is text with a link ", TextType.NORMAL),
+                TextNode("to boot dev", TextType.LINK, "https://www.boot.dev"),
+                TextNode(" and ", TextType.NORMAL),
+                TextNode("to youtube", TextType.LINK, "https://www.youtube.com/@bootdotdev"),
+                TextNode(", what else does one need?", TextType.NORMAL)
+            ]
+        self.assertEqual(split_nodes_link([node2]), expected2)
+
+        node3 = TextNode("[This](https://www.boot.dev) is a link and so is this [to youtube](https://www.youtube.com/@bootdotdev), what else does one need?", TextType.NORMAL)
+        expected3 = [
+                TextNode("This", TextType.LINK, "https://www.boot.dev"),
+                TextNode(" is a link and so is this ", TextType.NORMAL),
+                TextNode("to youtube", TextType.LINK, "https://www.youtube.com/@bootdotdev"),
+                TextNode(", what else does one need?", TextType.NORMAL)
+            ]
+        self.assertEqual(split_nodes_link([node3]), expected3)
+
+    def test_split_nodes_link_multiple_nodes(self):
+        node = TextNode("This is a link [to boot dev](https://www.boot.dev) and [to youtube](https://www.youtube.com/@bootdotdev)", TextType.NORMAL)
+        node2 = TextNode("Another node without links", TextType.NORMAL)
+
+        expected = [
+                TextNode("This is a link ", TextType.NORMAL),
+                TextNode("to boot dev", TextType.LINK, "https://www.boot.dev"),
+                TextNode(" and ", TextType.NORMAL,),
+                TextNode("to youtube", TextType.LINK, "https://www.youtube.com/@bootdotdev"),
+                TextNode("Another node without links", TextType.NORMAL)
+            ]
+        self.assertEqual(split_nodes_link([node, node2]), expected)
+
+    def test_split_nodes_link_wrong_text_type(self):
+        node = TextNode("This is not TextType.NORMAL", TextType.ITALIC)
+        expected = [TextNode("This is not TextType.NORMAL", TextType.ITALIC)]
+        self.assertEqual(split_nodes_link([node]), expected)
 
 if __name__ == "__main__":
     unittest.main()
