@@ -145,6 +145,29 @@ class TestMain(unittest.TestCase):
         expected2 = [("to boot dev", "https://www.boot.dev")]
         self.assertEqual(extract_markdown_images(text2), expected2)
 
+    def test_extract_markdown_images_no_matches(self):
+        text = "This is a text without image tags"
+
+        self.assertEqual(extract_markdown_images(text), None)
+
+    def test_extract_markdown_images_empty_alt_text(self):
+        text = "This image has empty alt text ![](https://www.boot.dev)"
+        expected = [("", "https://www.boot.dev")]
+
+        self.assertEqual(extract_markdown_images(text), expected)
+
+    def test_extract_markdown_images_empty_url(self):
+        text = "This image has empty url ![alt text in here]()"
+        expected = [("alt text in here", "")]
+
+        self.assertEqual(extract_markdown_images(text), expected)
+
+    def test_extract_markdown_images_both_empty(self):
+        text = "This image has empty url ![alt text in here]() and this one has empty alt text ![](https://www.boot.dev)"
+        expected = [("alt text in here", ""), ("", "https://www.boot.dev")]
+
+        self.assertEqual(extract_markdown_images(text), expected)
+
     def test_extract_markdown_links_normal_cases(self):
         text = "This is text with a [rick roll](https://i.imgur.com/aKaOqIh.gif) and [obi wan](https://i.imgur.com/fJRm4Vk.jpeg)"
 
@@ -155,6 +178,30 @@ class TestMain(unittest.TestCase):
 
         expected2 = [("to boot dev", "https://www.boot.dev")]
         self.assertEqual(extract_markdown_links(text2), expected2)
+
+    def test_extract_markdown_links_no_matches(self):
+        text = "This is a text without link tags"
+
+        self.assertEqual(extract_markdown_links(text), None)
+
+    def test_extract_markdown_links_empty_alt_text(self):
+        text = "This image has empty alt text [](https://www.boot.dev)"
+        expected = [("", "https://www.boot.dev")]
+
+        self.assertEqual(extract_markdown_links(text), expected)
+
+    def test_extract_markdown_links_empty_url(self):
+        text = "This image has empty url [alt text in here]()"
+        expected = [("alt text in here", "")]
+
+        self.assertEqual(extract_markdown_links(text), expected)
+
+    def test_extract_markdown_links_both_empty(self):
+        text = "This image has empty url [alt text in here]() and this one has empty alt text [](https://www.boot.dev)"
+        expected = [("alt text in here", ""), ("", "https://www.boot.dev")]
+
+        self.assertEqual(extract_markdown_links(text), expected)
+
 
 if __name__ == "__main__":
     unittest.main()
